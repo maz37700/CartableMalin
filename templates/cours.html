@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}CartableMalin — Mes cours{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <span class="label">Mon emploi du temps</span>
+    <h1>Mes <em>cours</em></h1>
+    <p class="subtitle">Sélectionne un jour pour voir ses cours</p>
+</div>
+
+<!-- Onglets des jours -->
+<div class="day-tabs">
+    {% for j in range(5) %}
+    <a href="#" class="day-tab {% if j == jour_actuel %}active{% endif %}" onclick="changeJour({{ j }}); return false;" data-jour="{{ j }}">
+        <span class="day-letter">{{ jours_fr[j][:1] }}</span>
+        <span class="day-num">{{ dates_semaine[j].day }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Liste des cours par jour -->
+{% for j in range(5) %}
+<div class="cours-list" id="jour-{{ j }}" style="{% if j != jour_actuel %}display:none;{% endif %}">
+    {% if semaine[j] %}
+        {% for c in semaine[j] %}
+        <div class="cours-item">
+            <div class="cours-time">
+                {{ c.heure }}<br>
+                <span style="opacity:0.5;">→ {{ c.heure[:2]|int + 1 }}h</span>
+            </div>
+            <div>
+                <div class="cours-matiere">{{ c.matiere }}</div>
+                <div class="cours-meta">{{ c.salle }}{% if c.prof %} · {{ c.prof }}{% endif %}</div>
+            </div>
+            <button class="cours-delete" onclick="supprimerCours({{ c.id }})" title="Supprimer">×</button>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            <div class="empty-icon">🌴</div>
+            <p>Aucun cours ce jour-là.</p>
+        </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<!-- Bouton ajouter -->
+<div style="padding: 0 18px; margin-top: 16px;">
+    <button class="btn btn-primary btn-block" onclick="openModalAjout()">
+        + Ajouter un cours
+    </button>
+</div>
+
+<!-- Modal d'ajout -->
+<div class="modal-backdrop" id="modal-ajout">
+    <div class="modal">
+        <h2>Nouveau cours</h2>
+
+        <div class="form-group">
+            <label>Jour</label>
+            <select id="add-jour">
+                <option value="0">Lundi</option>
+                <option value="1">Mardi</option>
+                <option value="2">Mercredi</option>
+                <option value="3">Jeudi</option>
+                <option value="4">Vendredi</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Heure (format HH:MM)</label>
+            <input type="time" id="add-heure" value="08:00">
+        </div>
+
+        <div class="form-group">
+            <label>Matière</label>
+            <input type="text" id="add-matiere" placeholder="Ex : Maths">
+        </div>
+
+        <div class="form-group">
+            <label>Salle (facultatif)</label>
+            <input type="text" id="add-salle" placeholder="Ex : Salle 12">
+        </div>
+
+        <div class="form-group">
+            <label>Professeur (facultatif)</label>
+            <input type="text" id="add-prof" placeholder="Ex : M. Durand">
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModalAjout()">Annuler</button>
+            <button class="btn btn-primary" onclick="ajouterCours()">Ajouter</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function changeJour(j) {
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-jour="${j}"]`).classList.add('active');
+    document.querySelectorAll('[id^="jour-"]').forEach(d => d.style.display = 'none');
+    document.getElementById('jour-' + j).style.display = '';
+}
+
+function openModalAjout() {
+    document.getElementById('modal-ajout').classList.add('show');
+}
+function closeModalAjout() {
+    document.getElementById('modal-ajout').classList.remove('show');
+}
+
+async function ajouterCours() {
+    const jour = parseInt(document.getElementById('add-jour').value);
+    const heure = document.getElementById('add-heure').value;
+    const matiere = document.getElementById('add-matiere').value.trim();
+    const salle = document.getElementById('add-salle').value.trim();
+    const prof = document.getElementById('add-prof').value.trim();
+
+    if (!matiere) { alert('Indique au moins le nom de la matière !'); return; }
+
+    const r = await fetch('/cours/ajouter', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ jour, heure, matiere, salle, prof })
+    });
+    const data = await r.json();
+    if (data.ok) location.reload();
+}
+
+async function supprimerCours(id) {
+    if (!confirm('Supprimer ce cours ?')) return;
+    const r = await fetch(`/cours/supprimer/${id}`, { method: 'DELETE' });
+    const data = await r.json();
+    if (data.ok) location.reload();
+}
+</script>
+{% endblock %}

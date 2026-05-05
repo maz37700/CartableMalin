@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}CartableMalin — Profil{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <span class="label">Mon compte</span>
+    <h1>Mon <em>profil</em></h1>
+</div>
+
+<!-- En-tête profil -->
+<div class="profile-top">
+    <div class="profile-pic">🧒</div>
+    <div class="profile-name">{{ user.prenom }}</div>
+    <div class="profile-class">{{ user.classe }} · {{ user.college }}</div>
+</div>
+
+<!-- Statistiques -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.jours_suivis }}</div>
+        <div class="stat-label">jours suivis</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.taux_moyen }}%</div>
+        <div class="stat-label">de réussite</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.oublis }}</div>
+        <div class="stat-label">oublis</div>
+    </div>
+</div>
+
+<!-- Réglages -->
+<div style="padding: 0 18px;">
+    <h3 style="font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin: 16px 0 10px;">
+        Réglages
+    </h3>
+
+    <div class="menu-row" onclick="openEdit('rappel-soir')">
+        <div class="left-side">
+            <span class="menu-icon">🌙</span>
+            <span>Rappel du soir</span>
+        </div>
+        <span class="menu-value" id="val-rappel-soir">{{ user.heure_rappel_soir }}</span>
+    </div>
+
+    <div class="menu-row" onclick="openEdit('rappel-matin')">
+        <div class="left-side">
+            <span class="menu-icon">☀️</span>
+            <span>Rappel du matin</span>
+        </div>
+        <span class="menu-value" id="val-rappel-matin">{{ user.heure_rappel_matin }}</span>
+    </div>
+
+    <div class="menu-row" onclick="openEdit('infos')">
+        <div class="left-side">
+            <span class="menu-icon">✏️</span>
+            <span>Mon prénom et ma classe</span>
+        </div>
+        <span class="menu-value">›</span>
+    </div>
+
+    <div class="menu-row" onclick="window.location='/cours'">
+        <div class="left-side">
+            <span class="menu-icon">📅</span>
+            <span>Mon emploi du temps</span>
+        </div>
+        <span class="menu-value">›</span>
+    </div>
+
+    <div class="menu-row" onclick="window.location='/materiel'">
+        <div class="left-side">
+            <span class="menu-icon">🎒</span>
+            <span>Mon matériel par matière</span>
+        </div>
+        <span class="menu-value">›</span>
+    </div>
+
+    <h3 style="font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin: 24px 0 10px;">
+        À propos
+    </h3>
+    <div class="menu-row" style="cursor:default;">
+        <div class="left-side">
+            <span class="menu-icon">ℹ️</span>
+            <span>CartableMalin</span>
+        </div>
+        <span class="menu-value">v1.0</span>
+    </div>
+    <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-top:12px; font-style:italic;">
+        Projet pédagogique — Techno 4ᵉ
+    </p>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-backdrop" id="modal-edit">
+    <div class="modal">
+        <h2 id="modal-title">Modifier</h2>
+        <div id="modal-body"></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeEdit()">Annuler</button>
+            <button class="btn btn-primary" onclick="saveEdit()">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const userData = {
+    prenom: {{ user.prenom|tojson }},
+    classe: {{ user.classe|tojson }},
+    college: {{ user.college|tojson }},
+    heure_rappel_soir: {{ user.heure_rappel_soir|tojson }},
+    heure_rappel_matin: {{ user.heure_rappel_matin|tojson }}
+};
+
+let currentEdit = null;
+
+function openEdit(type) {
+    currentEdit = type;
+    const body = document.getElementById('modal-body');
+    const title = document.getElementById('modal-title');
+
+    if (type === 'rappel-soir') {
+        title.textContent = 'Rappel du soir';
+        body.innerHTML = `
+            <div class="form-group">
+                <label>À quelle heure veux-tu être rappelé(e) le soir ?</label>
+                <input type="time" id="edit-input" value="${userData.heure_rappel_soir}">
+            </div>
+        `;
+    } else if (type === 'rappel-matin') {
+        title.textContent = 'Rappel du matin';
+        body.innerHTML = `
+            <div class="form-group">
+                <label>Heure du rappel du matin</label>
+                <input type="time" id="edit-input" value="${userData.heure_rappel_matin}">
+            </div>
+        `;
+    } else if (type === 'infos') {
+        title.textContent = 'Mes informations';
+        body.innerHTML = `
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" id="edit-prenom" value="${userData.prenom}">
+            </div>
+            <div class="form-group">
+                <label>Classe</label>
+                <input type="text" id="edit-classe" value="${userData.classe}">
+            </div>
+            <div class="form-group">
+                <label>Collège</label>
+                <input type="text" id="edit-college" value="${userData.college}">
+            </div>
+        `;
+    }
+
+    document.getElementById('modal-edit').classList.add('show');
+}
+
+function closeEdit() {
+    document.getElementById('modal-edit').classList.remove('show');
+    currentEdit = null;
+}
+
+async function saveEdit() {
+    let payload = { ...userData };
+
+    if (currentEdit === 'rappel-soir') {
+        payload.heure_rappel_soir = document.getElementById('edit-input').value;
+    } else if (currentEdit === 'rappel-matin') {
+        payload.heure_rappel_matin = document.getElementById('edit-input').value;
+    } else if (currentEdit === 'infos') {
+        payload.prenom = document.getElementById('edit-prenom').value.trim() || 'Tom';
+        payload.classe = document.getElementById('edit-classe').value.trim();
+        payload.college = document.getElementById('edit-college').value.trim();
+    }
+
+    const r = await fetch('/profil', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (data.ok) location.reload();
+}
+</script>
+{% endblock %}

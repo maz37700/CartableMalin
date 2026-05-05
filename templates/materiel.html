@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}CartableMalin — Mon matériel{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <span class="label">Configure ton matériel</span>
+    <h1>Mon <em>matériel</em></h1>
+    <p class="subtitle">Pour chaque matière, ajoute ce que tu dois apporter.</p>
+</div>
+
+{% if matieres %}
+    {% for matiere in matieres %}
+    <div class="matiere-block" data-matiere="{{ matiere }}">
+        <h3>{{ matiere }}</h3>
+
+        <div class="materiel-list" id="list-{{ loop.index }}">
+            {% if materiel_par_matiere[matiere] %}
+                {% for m in materiel_par_matiere[matiere] %}
+                <span class="materiel-pill" data-id="{{ m.id }}">
+                    {{ m.icone }} {{ m.nom }}
+                    <button onclick="supprimerMateriel({{ m.id }}, this)" title="Retirer">×</button>
+                </span>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--ink-soft); font-size:13px; font-style:italic; margin-bottom:8px;">Aucun matériel pour le moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="add-form">
+            <input type="text"
+                   placeholder="Ajouter (ex : cahier rouge)"
+                   onkeydown="if (event.key === 'Enter') ajouterMateriel('{{ matiere }}', this)">
+            <button class="btn btn-primary btn-sm"
+                    onclick="ajouterMateriel('{{ matiere }}', this.previousElementSibling)">
+                +
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty">
+        <div class="empty-icon">📭</div>
+        <p>Aucune matière dans ton emploi du temps.</p>
+        <a href="{{ url_for('cours') }}" class="btn btn-ink mt-2">Configurer mon emploi du temps</a>
+    </div>
+{% endif %}
+
+<div style="padding: 0 18px; margin: 16px 0;">
+    <p style="font-size:13px; color: var(--ink-soft); font-style: italic; text-align:center;">
+        Astuce : tape le nom et appuie sur Entrée ou clique sur +
+    </p>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function ajouterMateriel(matiere, input) {
+    const nom = input.value.trim();
+    if (!nom) return;
+
+    // Détection automatique d'une icône selon le mot
+    const icone = detectIcone(nom);
+
+    const r = await fetch('/materiel/ajouter', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ matiere, nom, icone })
+    });
+    const data = await r.json();
+    if (data.ok) location.reload();
+}
+
+async function supprimerMateriel(id, btn) {
+    const r = await fetch(`/materiel/supprimer/${id}`, { method: 'DELETE' });
+    const data = await r.json();
+    if (data.ok) {
+        btn.parentElement.style.opacity = '0';
+        btn.parentElement.style.transform = 'scale(0.8)';
+        setTimeout(() => btn.parentElement.remove(), 200);
+    }
+}
+
+function detectIcone(nom) {
+    const n = nom.toLowerCase();
+    if (n.includes('cahier rouge') || n.includes('maths') || n.includes('cahier rouge')) return '📕';
+    if (n.includes('cahier vert') || n.includes('svt') || n.includes('biologie')) return '📗';
+    if (n.includes('cahier bleu') || n.includes('histoire') || n.includes('géo')) return '📘';
+    if (n.includes('cahier jaune') || n.includes('français')) return '📙';
+    if (n.includes('cahier')) return '📓';
+    if (n.includes('manuel') || n.includes('livre')) return '📖';
+    if (n.includes('calcul')) return '🧮';
+    if (n.includes('classeur')) return '🗂️';
+    if (n.includes('crayon')) return '✏️';
+    if (n.includes('stylo')) return '🖊️';
+    if (n.includes('feutre') || n.includes('pinceau')) return '🖌️';
+    if (n.includes('couleur')) return '🖍️';
+    if (n.includes('tenue') || n.includes('survêt') || n.includes('short')) return '👕';
+    if (n.includes('basket') || n.includes('chaussure')) return '👟';
+    if (n.includes('eau') || n.includes('bouteille') || n.includes('gourde')) return '💧';
+    if (n.includes('flûte') || n.includes('musique')) return '🎵';
+    if (n.includes('atlas') || n.includes('carte')) return '🗺️';
+    if (n.includes('agenda') || n.includes('carnet')) return '📔';
+    if (n.includes('arts') || n.includes('peinture')) return '🎨';
+    return '📚';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF5C5C">
+<title>{% block title %}CartableMalin{% endblock %}</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <span>{% block heure %}9:41{% endblock %}</span>
+        <span class="status-right">●●● 📶 🔋</span>
+    </div>
+
+    <!-- CONTENU DE LA PAGE -->
+    {% block content %}{% endblock %}
+
+    <!-- BARRE DE MENU EN BAS -->
+    <nav class="tabbar">
+        <a href="{{ url_for('accueil') }}" class="{% if request.endpoint == 'accueil' %}active{% endif %}" title="Accueil">🏠</a>
+        <a href="{{ url_for('cours') }}" class="{% if request.endpoint == 'cours' %}active{% endif %}" title="Mes cours">📅</a>
+        <a href="{{ url_for('sac') }}" class="{% if request.endpoint == 'sac' %}active{% endif %}" title="Préparer mon sac">📚</a>
+        <a href="{{ url_for('materiel_page') }}" class="{% if request.endpoint == 'materiel_page' %}active{% endif %}" title="Mon matériel">🎒</a>
+        <a href="{{ url_for('profil') }}" class="{% if request.endpoint == 'profil' %}active{% endif %}" title="Profil">👤</a>
+    </nav>
+
+</div>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

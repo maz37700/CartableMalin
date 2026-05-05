@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}CartableMalin — Accueil{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <span class="label">Salut {{ user.prenom }} 👋</span>
+    <h1>Prêt pour<br><em>demain ?</em></h1>
+</div>
+
+<!-- Carte du jour de demain -->
+<div class="card coral">
+    <div class="card-label">{{ date_demain_str }}</div>
+    <h2>À ne pas oublier</h2>
+
+    <div class="progress-block">
+        <div class="progress-stats">
+            <span class="progress-num">{{ nb_coches }} / {{ nb_total }}</span>
+            <span style="font-size:13px;opacity:0.85;">{{ progression }}% prêt</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progression }}%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste rapide des items -->
+<ul class="item-list" style="padding: 0 18px;">
+    {% if items %}
+        {% for it in items[:5] %}
+        <li class="item {% if it.coche %}done{% endif %}"
+            data-nom="{{ it.nom }}"
+            onclick="toggleItem(this)">
+            <div class="checkbox">{% if it.coche %}✓{% endif %}</div>
+            <span class="item-icon">{{ it.icone }}</span>
+            <div style="flex:1;">
+                <div class="item-name">{{ it.nom }}</div>
+                <div class="item-meta">{{ it.matiere }}</div>
+            </div>
+        </li>
+        {% endfor %}
+
+        {% if items|length > 5 %}
+        <a href="{{ url_for('sac') }}" class="btn btn-ink btn-block mt-2">
+            Voir les {{ items|length }} affaires →
+        </a>
+        {% endif %}
+    {% else %}
+        <div class="empty">
+            <div class="empty-icon">🎉</div>
+            <p>Pas de cours demain ! Profite bien.</p>
+        </div>
+    {% endif %}
+</ul>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
