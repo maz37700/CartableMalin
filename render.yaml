@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cartable-malin
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1
